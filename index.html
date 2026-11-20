@@ -184,7 +184,7 @@ const CONFIG = {
   zaloUrl: '',          // dán link Zalo hỗ trợ để hiện nút
   events: [
     { id: 'hcm-0612', short: '06-12', date: '2026-12-06', place: 'Bệnh viện Lê Văn Thịnh, TP. Hồ Chí Minh', tbd: false, sub: '06/12/2026 · Bệnh viện Lê Văn Thịnh' },
-    { id: 'hcm-1312', short: '13-12', date: '2026-12-13', place: 'TP. Hồ Chí Minh', tbd: true, sub: '13/12/2026 · TP. Hồ Chí Minh' }
+    { id: 'hcm-1312', short: '13-12', date: '2026-12-13', place: 'Bệnh viện Đa khoa Bà Rịa, TP. Hồ Chí Minh', tbd: false, sub: '13/12/2026 · Bệnh viện Đa khoa Bà Rịa' }
   ]
 };
 /* ======================================================== */
@@ -249,26 +249,25 @@ function draw(c, ev, f, photo, exporting) {
     c.drawImage(im, -im.naturalWidth / 2, -im.naturalHeight / 2); c.restore();
   }
 
-  // guest block: name, role, organisation on a soft band (below the photo, above "ĐẾN THAM DỰ")
+  // guest block: one-line name, role, organisation, centred on a soft band between the photo and "ĐẾN THAM DỰ"
   const full = ((f.title ? f.title + ' ' : '') + (f.name || '')).trim().toUpperCase();
   const hasName = !!full, nameTxt = full || (exporting ? '' : 'HỌ VÀ TÊN');
-  const maxW = 600, top = 612;
-  let size = 58, lines = [];
-  for (; size >= 34; size -= 2) { c.font = font(800, size); lines = wrapLines(c, nameTxt, maxW); if (lines.length <= 2 && lines.every(t => c.measureText(t).width <= maxW)) break; }
-  const roleTxt = (f.role || '').trim().toUpperCase() || (exporting ? '' : 'CHỨC VỤ');
-  const orgTxt = (f.org || '').trim() || (exporting ? '' : 'Nơi công tác');
-  c.font = font(600, 27); const orgLines = orgTxt ? wrapLines(c, orgTxt, maxW).slice(0, 2) : [];
-  let gy = top + size + 4;
-  const nameEnd = gy + (lines.length - 1) * (size + 8);
-  let end = nameEnd + 10;
-  if (roleTxt) end = nameEnd + 46 + 8;
-  if (orgLines.length) end = (roleTxt ? nameEnd + 46 : nameEnd) + 40 + (orgLines.length - 1) * 34 + 10;
-  c.save(); c.fillStyle = 'rgba(255,255,255,.42)'; rr(c, 840 * K, top - 8, 413 * K, end - top + 22, 26); c.fill(); c.restore();
+  const maxW = 600;
+  const size = fitSize(c, nameTxt, 700, 44, 18, maxW), lines = [nameTxt];   // one line, shrinks to fit
+  const roleTxt = (f.role || '').trim().toUpperCase();
+  const orgTxt = (f.org || '').trim();
+  c.font = font(500, 25); const orgLines = orgTxt ? wrapLines(c, orgTxt, maxW).slice(0, 2) : [];
+  const ch = size + (roleTxt ? 42 : 0) + (orgLines.length ? 36 + (orgLines.length - 1) * 31 : 0);
+  const extra = (roleTxt ? 42 : 0) + (orgLines.length ? 36 + (orgLines.length - 1) * 31 : 0);
+  const bandX = 812 * K, bandW = W - 812 * K, bandY = 636, bandH = 168;      // fixed panel, text is centred inside it
+  const pg = c.createLinearGradient(bandX, 0, bandX + bandW, 0);
+  pg.addColorStop(0, 'rgba(70,160,252,0)'); pg.addColorStop(.2, 'rgba(70,160,252,.12)'); pg.addColorStop(.38, 'rgba(70,160,252,.34)'); pg.addColorStop(.62, 'rgba(70,160,252,.34)'); pg.addColorStop(.8, 'rgba(70,160,252,.12)'); pg.addColorStop(1, 'rgba(70,160,252,0)');
+  c.save(); c.fillStyle = pg; c.fillRect(bandX, bandY, bandW, bandH); c.restore();
+  let gy = bandY + bandH / 2 - (0.72 * size + extra + 5) / 2 + 0.72 * size;
   c.textAlign = 'center'; c.fillStyle = hasName ? '#102a6e' : '#8fa6d4';
-  lines.forEach((t, k) => { c.font = font(800, size); c.fillText(t, CX, gy + k * (size + 8)); });
-  let ry = nameEnd;
-  if (roleTxt) { ry += 46; c.fillStyle = (f.role || '').trim() ? '#1b3f8c' : '#8fa6d4'; const s = fitSize(c, roleTxt, 700, 31, 20, maxW); c.font = font(700, s); c.fillText(roleTxt, CX, ry); }
-  if (orgLines.length) { c.fillStyle = (f.org || '').trim() ? '#35599a' : '#8fa6d4'; c.font = font(600, 27); orgLines.forEach((t, k) => c.fillText(t, CX, ry + 40 + k * 34)); }
+  c.font = font(700, size); spacing(c, size > 30 ? 0.6 : 0); c.fillText(nameTxt, CX, gy); spacing(c, 0);
+  if (roleTxt) { gy += 42; c.fillStyle = (f.role || '').trim() ? '#0e2a6e' : '#8fa6d4'; const s = fitSize(c, roleTxt, 600, 27, 18, maxW); c.font = font(600, s); spacing(c, 0.8); c.fillText(roleTxt, CX, gy); spacing(c, 0); }
+  if (orgLines.length) { c.fillStyle = (f.org || '').trim() ? '#173a78' : '#8fa6d4'; c.font = font(500, 25); orgLines.forEach((t, k) => c.fillText(t, CX, gy + 36 + k * 31)); }
 
   // QR (only drawn once a link is set; until then the visual's own placeholder shows)
   if (CONFIG.qrUrl && typeof qrcode === 'function') {

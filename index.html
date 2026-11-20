@@ -5,7 +5,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap">
 <style>
 /* Layout: sticky poster preview on the left, four numbered steps on the right; stacks on phones.
    Palette: ink navy, orchid pink, soft violet-grey ground, white cards. Type: Montserrat throughout (matches the poster). */
@@ -129,7 +129,7 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
 <header class="top">
   <div class="top-in">
     <div class="logo" aria-hidden="true">K</div>
-    <div class="brand"><b>Invitation Studio</b><span>KBIT Aesthetic Technology Workshop 2026</span></div>
+    <div class="brand"><b>Invitation Studio</b><span>Korean Medical Aesthetic Technology Workshop 2026</span></div>
     <div class="pill">Ảnh được xử lý trên thiết bị của bạn</div>
   </div>
 </header>
@@ -178,8 +178,8 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
       <div class="ctl">
         <div class="row"><label for="zoom">Phóng to</label><input type="range" id="zoom" min="100" max="300" value="100"><output id="zoomO">100%</output></div>
         <div class="row"><label for="rot">Xoay ảnh</label><input type="range" id="rot" min="-45" max="45" value="0"><output id="rotO">0°</output></div>
-        <div class="row"><label for="px">Vị trí ngang</label><input type="range" id="px" min="-176" max="176" value="0"><output id="pxO">0</output></div>
-        <div class="row"><label for="py">Vị trí dọc</label><input type="range" id="py" min="-176" max="176" value="0"><output id="pyO">0</output></div>
+        <div class="row"><label for="px">Vị trí ngang</label><input type="range" id="px" min="-340" max="340" value="0"><output id="pxO">0</output></div>
+        <div class="row"><label for="py">Vị trí dọc</label><input type="range" id="py" min="-340" max="340" value="0"><output id="pyO">0</output></div>
         <button class="link" id="reset" type="button">Đặt lại vị trí ảnh</button>
       </div>
     </div>
@@ -197,16 +197,14 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
     <div class="btns"><button class="btn" id="outClose" type="button">Đóng</button></div>
   </div>
 </div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
 /* ============ CẤU HÌNH SỰ KIỆN (chỉnh ở đây) ============ */
 const CONFIG = {
-  qrUrl: 'https://kbitassociation.com/su-kien/kbit-aesthetic-technology-workshop-2026/',            // dán đường dẫn vào đây để vẽ mã QR lên thiệp
   zaloUrl: 'https://zalo.me/84886734569',          // dán link Zalo hỗ trợ để hiện nút
   events: [
-    { id: 'hcm-0612', short: '06-12', date: '2026-12-06', place: 'Bệnh viện Lê Văn Thịnh, TP. Hồ Chí Minh', tbd: false, sub: '06/12/2026 · Bệnh viện Lê Văn Thịnh' },
-    { id: 'hcm-1312', short: '13-12', date: '2026-12-13', place: 'Bệnh viện Đa khoa Vũng Tàu, TP. Hồ Chí Minh', tbd: false, sub: '13/12/2026 · Bệnh viện Đa khoa Vũng Tàu' }
+    { id: 'hcm-0612', short: '06-12', date: '2026-12-06', place: 'Bệnh viện Lê Văn Thịnh', addr: '130 Lê Văn Thịnh, Bình Trưng, Hồ Chí Minh', tbd: false, sub: '06/12/2026 · Bệnh viện Lê Văn Thịnh' },
+    { id: 'hcm-1312', short: '13-12', date: '2026-12-13', place: 'Bệnh viện Đa khoa Vũng Tàu', addr: '27 Đ. 2 Tháng 9, Phước Thắng, Hồ Chí Minh', tbd: false, sub: '13/12/2026 · Bệnh viện Đa khoa Vũng Tàu' }
   ]
 };
 /* ======================================================== */
@@ -233,14 +231,30 @@ function fmtDate(d) {
 }
 function slug(s) { return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'khach-moi'; }
 
-const K = W / 1295;                       // key-visual pixels -> canvas pixels
-const CX = 1043 * K;                      // centre line of the right column
-const FRAME = { x: 935 * K, y: 147 * K, s: 216 * K };   // photo window inside the glowing frame
+const K = W / 3200;                       // template pixels -> canvas pixels
+const CX = 2600 * K;                      // centre line of the right column
+const FRAME = { x: 2259 * K, y: 327 * K, s: 680 * K };   // photo window (blue placeholder in the template)
+const INK = '#307dd2';
 const bg = new Image(); bg.onload = () => schedule(); bg.src = 'kv.jpg';
 
-function centered(c, text, x, y, color, weight, size, maxW, ls) {
-  c.fillStyle = color; c.textAlign = 'center'; c.textBaseline = 'alphabetic';
-  const s = fitSize(c, text, weight, size, 18, maxW); c.font = font(weight, s); spacing(c, ls || 0); c.fillText(text, x, y); spacing(c, 0); return s;
+function drawEvent(c, ev) {
+  // drawn in template pixels (3200 x 3000), centred on the left panel (x = 1000)
+  c.save(); c.scale(K, K); c.fillStyle = INK; c.textAlign = 'left'; c.textBaseline = 'alphabetic';
+  const [yy, mm, dd] = ev.date.split('-'), ds = dd + '.' + mm + '.' + yy;
+  c.font = font(600, 96); spacing(c, 1); const dw = c.measureText(ds).width, R = 42, gap = 38, dx = 1000 - (2 * R + gap + dw) / 2, cy = 1238;
+  c.beginPath(); c.arc(dx + R, cy, R, 0, 7); c.fill();
+  c.strokeStyle = '#eef6ff'; c.lineWidth = 8; c.lineCap = 'round'; c.beginPath(); c.moveTo(dx + R, cy - 22); c.lineTo(dx + R, cy + 2); c.lineTo(dx + R + 17, cy + 17); c.stroke();
+  c.fillText(ds, dx + 2 * R + gap, cy + 34); spacing(c, 0);
+  const vs = fitSize(c, ev.place, 600, 100, 48, 1130); c.font = font(600, vs); const vw = c.measureText(ev.place).width;
+  let aw = 0; if (ev.addr) { c.font = font(500, 58); aw = Math.min(c.measureText(ev.addr).width, 1130); }
+  const tw = Math.max(vw, aw), pinW = 82, pg = 38, sx = 1000 - (pinW + pg + tw) / 2, vy = ev.addr ? 1455 : 1490;
+  const px = sx + pinW / 2, py = ev.addr ? 1467 : 1495;
+  c.fillStyle = INK; c.beginPath(); c.arc(px, py - 14, 36, Math.PI * 0.82, Math.PI * 2.18); c.lineTo(px, py + 40); c.closePath(); c.fill();
+  c.fillStyle = '#eef6ff'; c.beginPath(); c.arc(px, py - 14, 14, 0, 7); c.fill();
+  c.fillStyle = INK; c.beginPath(); c.ellipse(px, py + 44, 40, 12, 0, 0, 7); c.fill();
+  c.font = font(600, vs); c.fillText(ev.place, sx + pinW + pg, vy);
+  if (ev.addr) { const as = fitSize(c, ev.addr, 500, 58, 36, 1130); c.font = font(500, as); c.fillText(ev.addr, sx + pinW + pg, vy + 85); }
+  c.restore();
 }
 
 function draw(c, ev, f, photo, exporting) {
@@ -248,56 +262,35 @@ function draw(c, ev, f, photo, exporting) {
   if (bg.complete && bg.naturalWidth) c.drawImage(bg, 0, 0, W, H);
   else { const g = c.createLinearGradient(0, 0, W, 0); g.addColorStop(0, '#bddcfb'); g.addColorStop(1, '#eaf5ff'); c.fillStyle = g; c.fillRect(0, 0, W, H); }
 
-  // event box (left): text sits on the blue glass box of the key visual
-  const bx = 417 * K;
-  c.save(); c.shadowColor = 'rgba(0,40,130,.35)'; c.shadowBlur = 8; c.shadowOffsetY = 2;
-  if (ev.tbd) {
-    centered(c, ev.place, bx, 487 * K, '#ffffff', 800, 46, 800);
-    centered(c, fmtDate(ev.date), bx, 521 * K, '#f2f8ff', 500, 38, 800);
-    centered(c, 'Địa điểm cụ thể sẽ được cập nhật sau', bx, 549 * K, '#e3f0ff', 500, 28, 760);
-  } else {
-    centered(c, ev.place, bx, 495 * K, '#ffffff', 800, 46, 800);
-    centered(c, fmtDate(ev.date), bx, 534 * K, '#f2f8ff', 500, 38, 800);
-  }
-  c.restore();
+  drawEvent(c, ev);
 
   // guest photo
   if (photo.img) {
     const im = photo.img, S = FRAME.s;
-    c.save(); rr(c, FRAME.x + 1, FRAME.y + 1, S - 2, S - 2, 46); c.clip();
+    c.save(); rr(c, FRAME.x, FRAME.y, S, S, 40); c.clip();
     c.fillStyle = '#ebf6fe'; c.fillRect(FRAME.x, FRAME.y, S, S);
     const base = Math.max(S / im.naturalWidth, S / im.naturalHeight) * photo.zoom;
     c.translate(FRAME.x + S / 2 + photo.x, FRAME.y + S / 2 + photo.y); c.rotate(photo.rot * Math.PI / 180); c.scale(base, base);
     c.drawImage(im, -im.naturalWidth / 2, -im.naturalHeight / 2); c.restore();
   }
 
-  // guest block: one-line name, role, organisation, centred on a soft band between the photo and "ĐẾN THAM DỰ"
+  // guest block: one-line name, role, organisation, centred on the blue band under the photo
   const full = ((f.title ? f.title + ' ' : '') + (f.name || '')).trim().toUpperCase();
   const hasName = !!full, nameTxt = full || (exporting ? '' : 'HỌ VÀ TÊN');
-  const maxW = 600;
-  const size = fitSize(c, nameTxt, 700, 44, 18, maxW), lines = [nameTxt];   // one line, shrinks to fit
+  const maxW = 640;
+  const size = fitSize(c, nameTxt, 700, 46, 18, maxW);
   const roleTxt = (f.role || '').trim().toUpperCase();
   const orgTxt = (f.org || '').trim();
   c.font = font(500, 25); const orgLines = orgTxt ? wrapLines(c, orgTxt, maxW).slice(0, 2) : [];
-  const ch = size + (roleTxt ? 42 : 0) + (orgLines.length ? 36 + (orgLines.length - 1) * 31 : 0);
   const extra = (roleTxt ? 42 : 0) + (orgLines.length ? 36 + (orgLines.length - 1) * 31 : 0);
-  const bandX = 812 * K, bandW = W - 812 * K, bandY = 636, bandH = 168;      // fixed panel, text is centred inside it
-  const pg = c.createLinearGradient(bandX, 0, bandX + bandW, 0);
-  pg.addColorStop(0, 'rgba(70,160,252,0)'); pg.addColorStop(.2, 'rgba(70,160,252,.12)'); pg.addColorStop(.38, 'rgba(70,160,252,.34)'); pg.addColorStop(.62, 'rgba(70,160,252,.34)'); pg.addColorStop(.8, 'rgba(70,160,252,.12)'); pg.addColorStop(1, 'rgba(70,160,252,0)');
-  c.save(); c.fillStyle = pg; c.fillRect(bandX, bandY, bandW, bandH); c.restore();
+  const bandY = 1040 * K, bandH = 284 * K;
   let gy = bandY + bandH / 2 - (0.72 * size + extra + 5) / 2 + 0.72 * size;
-  c.textAlign = 'center'; c.fillStyle = hasName ? '#102a6e' : '#8fa6d4';
+  c.save(); c.shadowColor = 'rgba(8,40,110,.35)'; c.shadowBlur = 6; c.shadowOffsetY = 2;
+  c.textAlign = 'center'; c.fillStyle = hasName ? '#ffffff' : 'rgba(255,255,255,.55)';
   c.font = font(700, size); spacing(c, size > 30 ? 0.6 : 0); c.fillText(nameTxt, CX, gy); spacing(c, 0);
-  if (roleTxt) { gy += 42; c.fillStyle = (f.role || '').trim() ? '#0e2a6e' : '#8fa6d4'; const s = fitSize(c, roleTxt, 600, 27, 18, maxW); c.font = font(600, s); spacing(c, 0.8); c.fillText(roleTxt, CX, gy); spacing(c, 0); }
-  if (orgLines.length) { c.fillStyle = (f.org || '').trim() ? '#173a78' : '#8fa6d4'; c.font = font(500, 25); orgLines.forEach((t, k) => c.fillText(t, CX, gy + 36 + k * 31)); }
-
-  // QR (only drawn once a link is set; until then the visual's own placeholder shows)
-  if (CONFIG.qrUrl && typeof qrcode === 'function') {
-    const qx = 975 * K, qy = 1005 * K, qs = 140 * K;
-    c.fillStyle = '#ffffff'; rr(c, qx, qy, qs, qs, 26); c.fill();
-    const q = qrcode(0, 'M'); q.addData(CONFIG.qrUrl); q.make(); const m = q.getModuleCount(), cell = (qs - 36) / m; c.fillStyle = '#111';
-    for (let r = 0; r < m; r++) for (let k = 0; k < m; k++) if (q.isDark(r, k)) c.fillRect(qx + 18 + k * cell, qy + 18 + r * cell, cell + .5, cell + .5);
-  }
+  if (roleTxt) { gy += 42; c.fillStyle = (f.role || '').trim() ? '#ffffff' : 'rgba(255,255,255,.55)'; const s = fitSize(c, roleTxt, 600, 27, 18, maxW); c.font = font(600, s); spacing(c, 0.8); c.fillText(roleTxt, CX, gy); spacing(c, 0); }
+  if (orgLines.length) { c.fillStyle = (f.org || '').trim() ? '#f2f8ff' : 'rgba(255,255,255,.55)'; c.font = font(500, 25); orgLines.forEach((t, k) => c.fillText(t, CX, gy + 36 + k * 31)); }
+  c.restore();
 }
 
 /* ===== state & UI ===== */
@@ -354,7 +347,7 @@ canvas.addEventListener('pointerdown', e => { if (!state.photo.img) return; cons
 canvas.addEventListener('pointermove', e => {
   const p = cpos(e); canvas.classList.toggle('grab', !!state.photo.img && inFrame(p) && !drag);
   if (!drag) return; const ph = state.photo;
-  ph.x = Math.max(-176, Math.min(176, ph.x + (e.clientX - drag.x) * drag.k)); ph.y = Math.max(-176, Math.min(176, ph.y + (e.clientY - drag.y) * drag.k));
+  ph.x = Math.max(-340, Math.min(340, ph.x + (e.clientX - drag.x) * drag.k)); ph.y = Math.max(-340, Math.min(340, ph.y + (e.clientY - drag.y) * drag.k));
   drag.x = e.clientX; drag.y = e.clientY; sync(); schedule();
 });
 const endDrag = () => { drag = null; canvas.classList.remove('grabbing'); };
@@ -367,7 +360,7 @@ function validate() {
   return true;
 }
 function render(ev) { const c = document.createElement('canvas'); c.width = W; c.height = H; draw(c.getContext('2d'), ev, form(), state.photo, true); return new Promise(r => c.toBlob(r, 'image/png')); }
-const fname = ev => 'ThuMoi_KBIT-Workshop_' + ev.short + '_' + slug(form().name) + '.png';
+const fname = ev => 'ThuMoi_Workshop2026_' + ev.short + '_' + slug(form().name) + '.png';
 const UA = navigator.userAgent || '';
 const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(UA);
 const inApp = /Zalo|FBAN|FBAV|FB_IAB|Instagram|Messenger|Line\/|MicroMessenger|TikTok/i.test(UA);
@@ -410,7 +403,7 @@ $('dl').onclick = async () => { if (!validate()) return; const ev = evById(state
 $('dlAll').onclick = async () => {
   if (!validate()) return; setMsg('Đang tạo ảnh…'); const evs = state.sel.map(evById);
   if (await useModalFlow()) { const items = []; for (const ev of evs) items.push({ filename: fname(ev), blob: await render(ev) }); await showImages(items); setMsg(''); return; }
-  if (typeof JSZip === 'function') { const z = new JSZip(); for (const ev of evs) z.file(fname(ev), await render(ev)); await save('ThuMoi_KBIT-Workshop_' + slug(form().name) + '.zip', await z.generateAsync({ type: 'blob' })); }
+  if (typeof JSZip === 'function') { const z = new JSZip(); for (const ev of evs) z.file(fname(ev), await render(ev)); await save('ThuMoi_Workshop2026_' + slug(form().name) + '.zip', await z.generateAsync({ type: 'blob' })); }
   else for (const ev of evs) { if (!(await save(fname(ev), await render(ev)))) break; }
 };
 $('copy').onclick = async () => {
@@ -422,7 +415,7 @@ if (CONFIG.zaloUrl) { const z = $('zalo'); z.href = CONFIG.zaloUrl; z.hidden = f
 
 renderEvents(); renderTabs(); sync(); schedule();
 if (document.fonts && document.fonts.load) {
-  Promise.all([400, 500, 600, 700, 800].map(w => document.fonts.load(w + ' 40px Montserrat', 'Aa' + VI))).then(schedule).catch(() => {});
+  Promise.all([400, 500, 600, 700, 800, 900].map(w => document.fonts.load(w + ' 40px Montserrat', 'Aa' + VI))).then(schedule).catch(() => {});
   document.fonts.ready.then(schedule);
 }
 </script>

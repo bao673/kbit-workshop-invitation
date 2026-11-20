@@ -105,6 +105,8 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
 :root[data-theme="dark"] .zalo { color: #071a33; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .zalo { color: #071a33; } }
 .note { font-size: 12px; color: var(--muted); margin-top: 16px; text-align: center; }
+.notice { background: var(--chip); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin-bottom: 18px; font-size: 13px; line-height: 1.5; }
+.notice b { color: var(--accent); }
 @media (max-width: 920px) {
   .wrap { grid-template-columns: minmax(0, 1fr); }
   .preview { position: static; }
@@ -138,6 +140,7 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
   </section>
 
   <section class="card" aria-label="Thông tin thư mời">
+    <div class="notice" role="note"><b>Lưu ý:</b> Đây là link tạo thư mời online dành cho khách đã đăng ký thành công tham dự sự kiện.</div>
     <div class="step">
       <div class="sh"><div class="num">1</div><div><h2>Chọn sự kiện</h2><p>Có thể chọn nhiều sự kiện cùng lúc.</p></div></div>
       <div class="events" id="events"></div>
@@ -170,8 +173,8 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
       </div>
     </div>
 
-    <a class="zalo" id="zalo" href="#" hidden target="_blank" rel="noopener">Liên hệ qua Zalo</a>
-    <div class="note">Liên hệ ban tổ chức chương trình nếu cần hỗ trợ.</div>
+    <div class="note">Cần hỗ trợ? Liên hệ ban tổ chức chương trình qua Zalo KBIT (+84 886 734 569).</div>
+    <a class="zalo" id="zalo" href="https://zalo.me/84886734569" target="_blank" rel="noopener">Liên hệ qua Zalo</a>
   </section>
 </main>
 
@@ -181,7 +184,7 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
 /* ============ CẤU HÌNH SỰ KIỆN (chỉnh ở đây) ============ */
 const CONFIG = {
   qrUrl: 'https://kbitassociation.com/su-kien/kbit-aesthetic-technology-workshop-2026/',            // dán đường dẫn vào đây để vẽ mã QR lên thiệp
-  zaloUrl: '',          // dán link Zalo hỗ trợ để hiện nút
+  zaloUrl: 'https://zalo.me/84886734569',          // dán link Zalo hỗ trợ để hiện nút
   events: [
     { id: 'hcm-0612', short: '06-12', date: '2026-12-06', place: 'Bệnh viện Lê Văn Thịnh, TP. Hồ Chí Minh', tbd: false, sub: '06/12/2026 · Bệnh viện Lê Văn Thịnh' },
     { id: 'hcm-1312', short: '13-12', date: '2026-12-13', place: 'Bệnh viện Đa khoa Vũng Tàu, TP. Hồ Chí Minh', tbd: false, sub: '13/12/2026 · Bệnh viện Đa khoa Vũng Tàu' }

@@ -204,7 +204,7 @@ const CONFIG = {
   zaloUrl: 'https://zalo.me/84886734569',          // dán link Zalo hỗ trợ để hiện nút
   events: [
     { id: 'hcm-0612', short: '06-12', date: '2026-12-06', place: 'Bệnh viện Lê Văn Thịnh', addr: '130 Lê Văn Thịnh, Bình Trưng, Hồ Chí Minh', tbd: false, sub: '06/12/2026 · Bệnh viện Lê Văn Thịnh' },
-    { id: 'hcm-1312', short: '13-12', date: '2026-12-13', place: 'Bệnh viện Đa khoa Vũng Tàu', addr: '27 Đ. 2 Tháng 9, Phước Thắng, Hồ Chí Minh', tbd: false, sub: '13/12/2026 · Bệnh viện Đa khoa Vũng Tàu' }
+    { id: 'hcm-1312', short: '13-12', date: '2026-12-13', place: 'Bệnh viện Đa khoa Vũng Tàu', addr: '27 Đ. 2 Tháng 9, Phước Thắng, Hồ Chí Minh', orgLogo: true, tbd: false, sub: '13/12/2026 · Bệnh viện Đa khoa Vũng Tàu' }
   ]
 };
 /* ======================================================== */
@@ -236,6 +236,7 @@ const CX = 2600 * K;                      // centre line of the right column
 const FRAME = { x: 2259 * K, y: 327 * K, s: 680 * K };   // photo window (blue placeholder in the template)
 const INK = '#307dd2';
 const bg = new Image(); bg.onload = () => schedule(); bg.src = 'kv.jpg';
+const logoVT = new Image(); logoVT.onload = () => schedule(); logoVT.src = 'logo-vt.png';
 
 function drawEvent(c, ev) {
   // drawn in template pixels (3200 x 3000), centred on the left panel (x = 1000)
@@ -263,6 +264,11 @@ function draw(c, ev, f, photo, exporting) {
   else { const g = c.createLinearGradient(0, 0, W, 0); g.addColorStop(0, '#bddcfb'); g.addColorStop(1, '#eaf5ff'); c.fillStyle = g; c.fillRect(0, 0, W, H); }
 
   drawEvent(c, ev);
+  { // "TỔ CHỨC" label, centred over the organiser logos (2 logos on 06/12, 3 on 13/12)
+    c.save(); c.scale(K, K); c.fillStyle = INK; c.textAlign = 'center'; c.textBaseline = 'alphabetic';
+    c.font = font(500, 40); const lw0 = c.measureText('TỔ CHỨC').width, ls = 40 * 134 / lw0; c.font = font(500, ls);
+    c.fillText('TỔ CHỨC', ev.orgLogo ? 389 : 327, 111); c.restore(); }
+  if (ev.orgLogo && logoVT.complete && logoVT.naturalWidth) c.drawImage(logoVT, 538 * K, 127 * K, 78 * K, 78 * K);   // organiser logo (13/12 only), same size as the first one
 
   // guest photo
   if (photo.img) {
@@ -273,6 +279,11 @@ function draw(c, ev, f, photo, exporting) {
     c.translate(FRAME.x + S / 2 + photo.x, FRAME.y + S / 2 + photo.y); c.rotate(photo.rot * Math.PI / 180); c.scale(base, base);
     c.drawImage(im, -im.naturalWidth / 2, -im.naturalHeight / 2); c.restore();
   }
+
+  // glowing frame around the photo window
+  { const x = FRAME.x, y = FRAME.y, S = FRAME.s;
+    c.save(); c.shadowColor = 'rgba(60,150,250,.75)'; c.shadowBlur = 26; c.strokeStyle = 'rgba(255,255,255,.95)'; c.lineWidth = 9; rr(c, x - 2, y - 2, S + 4, S + 4, 44); c.stroke(); c.restore();
+    c.save(); c.strokeStyle = 'rgba(110,185,255,.9)'; c.lineWidth = 2.5; rr(c, x - 8, y - 8, S + 16, S + 16, 50); c.stroke(); c.restore(); }
 
   // guest block: one-line name, role, organisation, centred on the blue band under the photo
   const full = ((f.title ? f.title + ' ' : '') + (f.name || '')).trim().toUpperCase();

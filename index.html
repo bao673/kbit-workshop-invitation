@@ -267,8 +267,8 @@ function draw(c, ev, f, photo, exporting) {
   { // "TỔ CHỨC" label, centred over the organiser logos (2 logos on 06/12, 3 on 13/12)
     c.save(); c.scale(K, K); c.fillStyle = INK; c.textAlign = 'center'; c.textBaseline = 'alphabetic';
     c.font = font(500, 40); const lw0 = c.measureText('TỔ CHỨC').width, ls = 40 * 134 / lw0; c.font = font(500, ls);
-    c.fillText('TỔ CHỨC', ev.orgLogo ? 389 : 327, 111); c.restore(); }
-  if (ev.orgLogo && logoVT.complete && logoVT.naturalWidth) c.drawImage(logoVT, 538 * K, 127 * K, 78 * K, 78 * K);   // organiser logo (13/12 only), same size as the first one
+    c.fillText('TỔ CHỨC', ev.orgLogo ? 274 : 327, 111); c.restore(); }
+  if (ev.orgLogo && logoVT.complete && logoVT.naturalWidth) c.drawImage(logoVT, 56 * K, 127 * K, 78 * K, 78 * K);   // organiser logo (13/12 only), same size as the first one
 
   // guest photo
   if (photo.img) {

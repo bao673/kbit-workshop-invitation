@@ -171,6 +171,8 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
         <div class="f"><label for="name">Họ và tên</label><input type="text" id="name" autocomplete="name" placeholder="NGUYỄN MINH ANH" maxlength="60"></div>
         <div class="f"><label for="role">Chức vụ <span class="opt">(tùy chọn)</span></label><input type="text" id="role" placeholder="GIÁM ĐỐC / BÁC SĨ" maxlength="50"></div>
         <div class="f"><label for="org">Nơi công tác <span class="opt">(tùy chọn)</span></label><input type="text" id="org" autocomplete="organization" placeholder="TÊN PHÒNG KHÁM / BỆNH VIỆN" maxlength="80"></div>
+        <div class="f"><label for="caSel">Ca tham dự <span class="opt">(tùy chọn)</span></label>
+          <select id="caSel"><option value="">Không hiển thị</option><option value="sáng">Ca sáng · 08:15 – 12:00</option><option value="chiều">Ca chiều · 13:15 – 17:00</option></select></div>
       </div>
     </div>
 
@@ -218,6 +220,8 @@ const CONFIG = {
   let want = ''; try {
     const raw = new URLSearchParams(location.search).get('ev') || '';   // chấp nhận: 06-12, 0612, 06/12, "Ngày 06/12/2026", "6/12"...
     const m = raw.match(/(\d{1,2})\s*[\/\-.]\s*(\d{1,2})/); want = m ? m[1].padStart(2, '0') + m[2].padStart(2, '0') : raw.replace(/\D/g, '');
+    const cm = raw.match(/ca\s*(sáng|chiều)/i);   // "Ca sáng (08:15–12:00)" / "Ca chiều (13:15–17:00)"
+    if (cm) { const tm = raw.match(/(\d{1,2}[:h.]\d{2})\s*[–\-—]\s*(\d{1,2}[:h.]\d{2})/); window.GUEST_CA = { label: 'CA ' + cm[1].toUpperCase(), time: tm ? tm[1].replace(/[h.]/, ':') + ' – ' + tm[2].replace(/[h.]/, ':') : '' }; }
   } catch (e) {}
   const hit = CONFIG.events.find(e => e.short.replace(/\D/g, '') === want);
   CONFIG.events = hit ? [hit] : CONFIG.events.filter(e => e.listed !== false);
@@ -256,10 +260,17 @@ function drawEvent(c, ev) {
   // drawn in template pixels (3200 x 3000), centred on the left panel (x = 1000)
   c.save(); c.scale(K, K); c.fillStyle = INK; c.textAlign = 'left'; c.textBaseline = 'alphabetic';
   const [yy, mm, dd] = ev.date.split('-'), ds = dd + '.' + mm + '.' + yy;
-  c.font = font(600, 96); spacing(c, 1); const dw = c.measureText(ds).width, R = 42, gap = 38, dx = 1000 - (2 * R + gap + dw) / 2, cy = 1143;
+  c.font = font(600, 96); spacing(c, 1); const dw = c.measureText(ds).width, R = 42, gap = 38, cy = 1143;
+  const ca = window.GUEST_CA, caTxt = ca ? ca.label + (ca.time ? '  ·  ' + ca.time : '') : '';
+  c.font = font(700, 40); spacing(c, 1.5); const pw = ca ? c.measureText(caTxt).width + 72 : 0; c.font = font(600, 96); spacing(c, 1);
+  const dx = 1000 - (2 * R + gap + dw + (ca ? 44 + pw : 0)) / 2;
   c.beginPath(); c.arc(dx + R, cy, R, 0, 7); c.fill();
   c.strokeStyle = '#eef6ff'; c.lineWidth = 8; c.lineCap = 'round'; c.beginPath(); c.moveTo(dx + R, cy - 22); c.lineTo(dx + R, cy + 2); c.lineTo(dx + R + 17, cy + 17); c.stroke();
   c.fillText(ds, dx + 2 * R + gap, cy + 34); spacing(c, 0);
+  if (ca) { // session pill next to the date, e.g. "CA SÁNG · 08:15 – 12:00"
+    const ph = 70, px0 = dx + 2 * R + gap + dw + 44, py0 = cy - ph / 2;
+    c.fillStyle = INK; rr(c, px0, py0, pw, ph, ph / 2); c.fill();
+    c.font = font(700, 40); spacing(c, 1.5); c.fillStyle = '#ffffff'; c.textBaseline = 'middle'; c.fillText(caTxt, px0 + 36, cy + 3); c.textBaseline = 'alphabetic'; spacing(c, 0); c.fillStyle = INK; }
   const vs = fitSize(c, ev.place, 600, 100, 48, 1130); c.font = font(600, vs); const vw = c.measureText(ev.place).width;
   let aw = 0; if (ev.addr) { c.font = font(500, 58); aw = Math.min(c.measureText(ev.addr).width, 1130); }
   const tw = Math.max(vw, aw), pinW = 82, pg = 38, sx = 1000 - (pinW + pg + tw) / 2, vy = ev.addr ? 1342 : 1377;
@@ -457,6 +468,12 @@ if (CONFIG.zaloUrl) { const z = $('zalo'); z.href = CONFIG.zaloUrl; z.hidden = f
   if (CONFIG.events.length === 1 && g('ev')) $('stepEv').hidden = true;
   document.querySelector('#stepInfo .num').textContent = '1'; $('numPhoto').textContent = '2'; document.querySelector('#stepPhoto h2').textContent = 'Thêm ảnh chân dung';
 })();
+
+// Ca tham dự: lấy từ link (nếu có) hoặc khách tự chọn
+const CA_TIME = { 'sáng': '08:15 – 12:00', 'chiều': '13:15 – 17:00' };
+function applyCa() { const v = $('caSel').value; window.GUEST_CA = v ? { label: 'CA ' + v.toUpperCase(), time: CA_TIME[v] } : null; schedule(); }
+if (window.GUEST_CA) { const m = /SÁNG/.test(window.GUEST_CA.label) ? 'sáng' : 'chiều'; $('caSel').value = m; window.GUEST_CA = { label: 'CA ' + m.toUpperCase(), time: CA_TIME[m] }; }
+$('caSel').addEventListener('change', applyCa);
 
 renderEvents(); renderTabs(); sync(); schedule();
 if (document.fonts && document.fonts.load) {

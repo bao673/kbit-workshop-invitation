@@ -215,7 +215,10 @@ const CONFIG = {
 // Link thư mời theo buổi đã đăng ký: ...?ev=06-12  hoặc  ...?ev=13-12  (có thể viết 0612, 06/12, 1312, 13/12).
 // Có ev -> chỉ hiện đúng buổi đó. Không có ev -> hiện các buổi có listed != false (hiện tại: 06/12).
 (function () {
-  let want = ''; try { want = (new URLSearchParams(location.search).get('ev') || '').replace(/\D/g, ''); } catch (e) {}
+  let want = ''; try {
+    const raw = new URLSearchParams(location.search).get('ev') || '';   // chấp nhận: 06-12, 0612, 06/12, "Ngày 06/12/2026", "6/12"...
+    const m = raw.match(/(\d{1,2})\s*[\/\-.]\s*(\d{1,2})/); want = m ? m[1].padStart(2, '0') + m[2].padStart(2, '0') : raw.replace(/\D/g, '');
+  } catch (e) {}
   const hit = CONFIG.events.find(e => e.short.replace(/\D/g, '') === want);
   CONFIG.events = hit ? [hit] : CONFIG.events.filter(e => e.listed !== false);
 })();
@@ -253,14 +256,14 @@ function drawEvent(c, ev) {
   // drawn in template pixels (3200 x 3000), centred on the left panel (x = 1000)
   c.save(); c.scale(K, K); c.fillStyle = INK; c.textAlign = 'left'; c.textBaseline = 'alphabetic';
   const [yy, mm, dd] = ev.date.split('-'), ds = dd + '.' + mm + '.' + yy;
-  c.font = font(600, 96); spacing(c, 1); const dw = c.measureText(ds).width, R = 42, gap = 38, dx = 1000 - (2 * R + gap + dw) / 2, cy = 1238;
+  c.font = font(600, 96); spacing(c, 1); const dw = c.measureText(ds).width, R = 42, gap = 38, dx = 1000 - (2 * R + gap + dw) / 2, cy = 1143;
   c.beginPath(); c.arc(dx + R, cy, R, 0, 7); c.fill();
   c.strokeStyle = '#eef6ff'; c.lineWidth = 8; c.lineCap = 'round'; c.beginPath(); c.moveTo(dx + R, cy - 22); c.lineTo(dx + R, cy + 2); c.lineTo(dx + R + 17, cy + 17); c.stroke();
   c.fillText(ds, dx + 2 * R + gap, cy + 34); spacing(c, 0);
   const vs = fitSize(c, ev.place, 600, 100, 48, 1130); c.font = font(600, vs); const vw = c.measureText(ev.place).width;
   let aw = 0; if (ev.addr) { c.font = font(500, 58); aw = Math.min(c.measureText(ev.addr).width, 1130); }
-  const tw = Math.max(vw, aw), pinW = 82, pg = 38, sx = 1000 - (pinW + pg + tw) / 2, vy = ev.addr ? 1455 : 1490;
-  const px = sx + pinW / 2, py = ev.addr ? 1467 : 1495;
+  const tw = Math.max(vw, aw), pinW = 82, pg = 38, sx = 1000 - (pinW + pg + tw) / 2, vy = ev.addr ? 1342 : 1377;
+  const px = sx + pinW / 2, py = ev.addr ? 1354 : 1382;
   c.fillStyle = INK; c.beginPath(); c.arc(px, py - 14, 36, Math.PI * 0.82, Math.PI * 2.18); c.lineTo(px, py + 40); c.closePath(); c.fill();
   c.fillStyle = '#eef6ff'; c.beginPath(); c.arc(px, py - 14, 14, 0, 7); c.fill();
   c.fillStyle = INK; c.beginPath(); c.ellipse(px, py + 44, 40, 12, 0, 0, 7); c.fill();

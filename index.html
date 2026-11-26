@@ -208,7 +208,9 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
 const CONFIG = {
   zaloUrl: 'https://zalo.me/84886734569',          // dán link Zalo hỗ trợ để hiện nút
   events: [
-    { id: 'hcm-0612', short: '06-12', date: '2026-12-06', place: 'Bệnh viện Lê Văn Thịnh', addr: '130 Lê Văn Thịnh, Bình Trưng, Hồ Chí Minh', tbd: false, sub: '06/12/2026 · Bệnh viện Lê Văn Thịnh' },
+    // kv: ảnh nền của buổi. baked: true = KV đã in sẵn ngày, địa điểm, nhãn "TỔ CHỨC" (code không vẽ lại).
+    // Buổi không có kv riêng dùng KV trống (kv-v2.jpg) và code tự vẽ ngày + địa điểm.
+    { id: 'hcm-0612', short: '06-12', kv: 'kv-v2-0612.jpg', baked: true, date: '2026-12-06', place: 'Bệnh viện Lê Văn Thịnh', addr: '130 Lê Văn Thịnh, Bình Trưng, Hồ Chí Minh', tbd: false, sub: '06/12/2026 · Bệnh viện Lê Văn Thịnh' },
     { id: 'hcm-1312', short: '13-12', date: '2026-12-13', place: 'Bệnh viện Đa khoa Vũng Tàu', addr: '27 Đ. 2 Tháng 9, Phước Thắng, Hồ Chí Minh', orgLogo: true, listed: false, tbd: false, sub: '13/12/2026 · Bệnh viện Đa khoa Vũng Tàu' }
   ]
 };
@@ -252,25 +254,36 @@ function slug(s) { return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '
 const K = W / 3200;                       // template pixels -> canvas pixels
 const CX = 2600 * K;                      // centre line of the right column
 const FRAME = { x: 2259 * K, y: 327 * K, s: 680 * K };   // photo window (blue placeholder in the template)
-const INK = '#307dd2';
-const bg = new Image(); bg.onload = () => schedule(); bg.src = 'kv.jpg';
+const INK = '#19359b';                   // KV v2 navy (sampled from the new key visual)
+const KV_BLANK = 'kv-v2.jpg';            // KV v2 (26/11) with date, venue and "TỔ CHỨC" removed — code draws them
+const kvCache = {};
+function kvFor(ev) { const src = ev.kv || KV_BLANK; if (!kvCache[src]) { const im = new Image(); im.onload = () => schedule(); im.src = src; kvCache[src] = im; } return kvCache[src]; }
+CONFIG.events.forEach(kvFor);                // preload
 const logoVT = new Image(); logoVT.onload = () => schedule(); logoVT.src = 'logo-vt.png';
 
+function caText() { const ca = window.GUEST_CA; return ca ? ca.label + (ca.time ? '  ·  ' + ca.time : '') : ''; }
+function drawCaPill(c, x0, cy, txt, pw) { // session pill, e.g. "CA SÁNG · 08:15 – 12:00" (template px, c already scaled)
+  const ph = 70; c.fillStyle = INK; rr(c, x0, cy - ph / 2, pw, ph, ph / 2); c.fill();
+  c.font = font(700, 40); spacing(c, 1.5); c.fillStyle = '#ffffff'; c.textBaseline = 'middle'; c.textAlign = 'left'; c.fillText(txt, x0 + 36, cy + 3);
+  c.textBaseline = 'alphabetic'; spacing(c, 0); c.fillStyle = INK;
+}
 function drawEvent(c, ev) {
+  if (ev.baked) { // KV already shows date + venue: only add the session pill, centred between the address and the schedule box
+    const t = caText(); if (!t) return;
+    c.save(); c.scale(K, K); c.font = font(700, 40); spacing(c, 1.5); const pw = c.measureText(t).width + 72; spacing(c, 0);
+    drawCaPill(c, 1000 - pw / 2, 1512, t, pw); c.restore(); return;
+  }
   // drawn in template pixels (3200 x 3000), centred on the left panel (x = 1000)
   c.save(); c.scale(K, K); c.fillStyle = INK; c.textAlign = 'left'; c.textBaseline = 'alphabetic';
   const [yy, mm, dd] = ev.date.split('-'), ds = dd + '.' + mm + '.' + yy;
   c.font = font(600, 96); spacing(c, 1); const dw = c.measureText(ds).width, R = 42, gap = 38, cy = 1143;
-  const ca = window.GUEST_CA, caTxt = ca ? ca.label + (ca.time ? '  ·  ' + ca.time : '') : '';
+  const caTxt = caText(), ca = !!caTxt;
   c.font = font(700, 40); spacing(c, 1.5); const pw = ca ? c.measureText(caTxt).width + 72 : 0; c.font = font(600, 96); spacing(c, 1);
   const dx = 1000 - (2 * R + gap + dw + (ca ? 44 + pw : 0)) / 2;
   c.beginPath(); c.arc(dx + R, cy, R, 0, 7); c.fill();
   c.strokeStyle = '#eef6ff'; c.lineWidth = 8; c.lineCap = 'round'; c.beginPath(); c.moveTo(dx + R, cy - 22); c.lineTo(dx + R, cy + 2); c.lineTo(dx + R + 17, cy + 17); c.stroke();
   c.fillText(ds, dx + 2 * R + gap, cy + 34); spacing(c, 0);
-  if (ca) { // session pill next to the date, e.g. "CA SÁNG · 08:15 – 12:00"
-    const ph = 70, px0 = dx + 2 * R + gap + dw + 44, py0 = cy - ph / 2;
-    c.fillStyle = INK; rr(c, px0, py0, pw, ph, ph / 2); c.fill();
-    c.font = font(700, 40); spacing(c, 1.5); c.fillStyle = '#ffffff'; c.textBaseline = 'middle'; c.fillText(caTxt, px0 + 36, cy + 3); c.textBaseline = 'alphabetic'; spacing(c, 0); c.fillStyle = INK; }
+  if (ca) drawCaPill(c, dx + 2 * R + gap + dw + 44, cy, caTxt, pw);   // session pill next to the date
   const vs = fitSize(c, ev.place, 600, 100, 48, 1130); c.font = font(600, vs); const vw = c.measureText(ev.place).width;
   let aw = 0; if (ev.addr) { c.font = font(500, 58); aw = Math.min(c.measureText(ev.addr).width, 1130); }
   const tw = Math.max(vw, aw), pinW = 82, pg = 38, sx = 1000 - (pinW + pg + tw) / 2, vy = ev.addr ? 1342 : 1377;
@@ -285,15 +298,17 @@ function drawEvent(c, ev) {
 
 function draw(c, ev, f, photo, exporting) {
   c.clearRect(0, 0, W, H);
+  const bg = kvFor(ev);
   if (bg.complete && bg.naturalWidth) c.drawImage(bg, 0, 0, W, H);
   else { const g = c.createLinearGradient(0, 0, W, 0); g.addColorStop(0, '#bddcfb'); g.addColorStop(1, '#eaf5ff'); c.fillStyle = g; c.fillRect(0, 0, W, H); }
 
   drawEvent(c, ev);
-  { // "TỔ CHỨC" label, centred over the organiser logos (2 logos on 06/12, 3 on 13/12)
+  if (!ev.baked) { // "TỔ CHỨC" label, centred over the organiser logos (LVT + KBIT on 06/12; VT + LVT + KBIT on 13/12)
+    // KV v2: LVT logo x 162–216, KBIT x 248–384, logos y 130–184; label matches "BẢO TRỢ" (93 px wide, baseline y 119)
     c.save(); c.scale(K, K); c.fillStyle = INK; c.textAlign = 'center'; c.textBaseline = 'alphabetic';
-    c.font = font(500, 40); const lw0 = c.measureText('TỔ CHỨC').width, ls = 40 * 134 / lw0; c.font = font(500, ls);
-    c.fillText('TỔ CHỨC', ev.orgLogo ? 274 : 327, 111); c.restore(); }
-  if (ev.orgLogo && logoVT.complete && logoVT.naturalWidth) c.drawImage(logoVT, 56 * K, 127 * K, 78 * K, 78 * K);   // organiser logo (13/12 only), same size as the first one
+    c.font = font(500, 22);   // cap height ≈ 15 px, same as "BẢO TRỢ"
+    c.fillText('TỔ CHỨC', ev.orgLogo ? 230 : 273, 120); c.restore(); }
+  if (ev.orgLogo && logoVT.complete && logoVT.naturalWidth) c.drawImage(logoVT, 75 * K, 130 * K, 55 * K, 55 * K);   // organiser logo (13/12 only), same size and gap as the LVT logo
 
   // guest photo
   if (photo.img) {
